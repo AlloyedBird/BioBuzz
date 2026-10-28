@@ -5,19 +5,26 @@ import android.util.Size;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Annotations.TESTING;
+import org.firstinspires.ftc.teamcode.Robot.Vision.VisionCircularProcessor;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import java.util.List;
 
-@TeleOp(name = "AprilTag Telemetry OpMode", group = "Sensor")
-public class VisionOpmode extends LinearOpMode {
+@TeleOp(name = "AprilTag Telemetry OpMode", group = "Telemetric")
+@TESTING
+public class PF_VCentric_NLinearTest extends LinearOpMode {
 
     // Declare VisionPortal and AprilTag Processor
     private AprilTagProcessor aprilTag;
-    private VisionPortal visionPortal;
+    private VisionPortal tagPortal;
+    private VisionPortal circlePortal;
+
+    private VisionCircularProcessor circler;
 
     @Override
     public void runOpMode() {
@@ -25,17 +32,31 @@ public class VisionOpmode extends LinearOpMode {
         // 1. Initialize the AprilTag Processor
         aprilTag = new AprilTagProcessor.Builder()
                 // You can add custom calibrations or tag libraries here if needed
+                .setDrawTagOutline(true)
+                .setDrawAxes(true)
+                .setDrawTagID(true)
+                .setDrawCubeProjection(true)
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+                .setTagLibrary(AprilTagGameDatabase.getBioBuzzTagLibrary())
                 .build();
+
+        circler = new VisionCircularProcessor();
 
         // 2. Initialize the VisionPortal
         // Note: Ensure your webcam name exactly matches the robot configuration
-        visionPortal = new VisionPortal.Builder()
+        tagPortal = new VisionPortal.Builder()
                 .setCameraResolution(new Size(640, 400))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
-
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .addProcessor(aprilTag)
                 .build();
+
+        // Custom circle processor type shi
+        circlePortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "colorCamera"))
+                .build();
+
+
 
         telemetry.addLine("VisionPortal initialized. Waiting for start...");
         telemetry.update();
@@ -105,8 +126,8 @@ public class VisionOpmode extends LinearOpMode {
         }
 
         // Clean up when opmode is stopped
-        if (visionPortal != null) {
-            visionPortal.close();
+        if (tagPortal != null) {
+            tagPortal.close();
         }
     }
 }

@@ -1,67 +1,111 @@
 package org.firstinspires.ftc.teamcode.Teleop;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-@TeleOp(name="Field Centric Teleop", group="Teleop")
-public class FieldCentricTeleop extends OpMode {
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Annotations.DEV;
+
+import java.util.List;
+
+@TeleOp(name="FF-Telemetric", group="Telemetric")
+@DEV
+public class FF_FCentric_LinearOp extends OpMode {
     private DcMotor frontLeft = null;
     private DcMotor frontRight = null;
     private DcMotor backLeft = null;
     private DcMotor backRight = null;
-    private IMU imu = null;
+    private SparkFunOTOS otos;
+    SparkFunOTOS.Pose2D pos;
+    SparkFunOTOS.Status otosStatus;
 
-    private boolean driveModeRobot = false;
+    List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+
+    double robotYaw;
+    //FlowerSubsystem flowerSubsystem = null;
+
+    private boolean drivetrainModeFieldCentric = false;
 
     @Override
     public void init() {
+        //flowerSubsystem = new FlowerSubsystem(hardwareMap);
+
         frontLeft = hardwareMap.get(DcMotorImplEx.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotorImplEx.class, "frontRight");
         backLeft = hardwareMap.get(DcMotorImplEx.class, "backLeft");
         backRight = hardwareMap.get(DcMotorImplEx.class, "backRight");
 
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
-        RevHubOrientationOnRobot orientationOnRobot = new
-                RevHubOrientationOnRobot(logoDirection, usbDirection);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        otos = hardwareMap.get(SparkFunOTOS.class, "otos");
+        otos.begin();
+
+        if (!otos.begin()) {
+            throw new IllegalStateException("Otos not started!");
+        }
+
+        otos.setLinearUnit(DistanceUnit.INCH);
+        otos.setAngularUnit(AngleUnit.DEGREES);
+
+        //otos.setOffset(new SparkFunOTOS.Pose2D(xOffset, yOffset, hOffset));
+
+        otos.calibrateImu();
+        otos.resetTracking();
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
+
+    }
+
+    @Override
+    public void init_loop() {
+        if (gamepad1.a){
+            drivetrainModeFieldCentric = !drivetrainModeFieldCentric;
+        }
     }
 
     @Override
     public void loop(){
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
+
+        robotYaw = pos.h;
+        otosStatus = otos.getStatus();
+        pos = otos.getPosition();
+
+        telemetry.addLine("Drivetrain Data ↓");
         telemetry.addData("Front Left Pos: ", frontLeft.getCurrentPosition());
         telemetry.addData("Front Right Pos:", frontRight.getCurrentPosition());
         telemetry.addData("Back Left Pos: ", backLeft.getCurrentPosition());
         telemetry.addData("Right Back Pos: ", backRight.getCurrentPosition());
-        telemetry.addData("Is robot oriented? ", driveModeRobot);
+        telemetry.addData("Is robot oriented? ", drivetrainModeFieldCentric);
 
-        if (gamepad1.a){
-            imu.resetYaw();
-        }
+        telemetry.addLine("Sparkfun Data ↓");
+        telemetry.addData("Otos Depth Error: ", otosStatus.warnOpticalTracking);
+        telemetry.addData("Otos Tilt Error", otosStatus.warnTiltAngle);
+        telemetry.addData("Otos Laser error: ", otosStatus.errorLsm);
+        telemetry.addData("Otos Tracking Loss Error: ", otosStatus.errorPaa);
 
-        if (gamepad1.left_bumper) {
-            driveModeRobot = !driveModeRobot;
-        }
-        if (driveModeRobot){
+        telemetry.addLine("Pose Data ↓");
+        telemetry.addData("Otos X Pos: ", pos.x);
+        telemetry.addData("Otos Y Pos: ", pos.y);
+        telemetry.addData("Otos θ", pos.h);
+
+        if (drivetrainModeFieldCentric){
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         }
-        if (!driveModeRobot){
+        if (!drivetrainModeFieldCentric){
             driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         }
 
@@ -92,7 +136,7 @@ public class FieldCentricTeleop extends OpMode {
         double theta = Math.atan2(forward, right);
         double r = Math.hypot(right, forward);
         theta = AngleUnit.normalizeRadians(theta -
-                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+                Math.toRadians(pos.h));
 
         double newForward = r * Math.sin(theta);
         double newRight = r * Math.cos(theta);
