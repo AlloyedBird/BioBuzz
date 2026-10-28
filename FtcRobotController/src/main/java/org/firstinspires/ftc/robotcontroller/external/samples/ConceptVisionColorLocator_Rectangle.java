@@ -143,7 +143,6 @@ public class ConceptVisionColorLocator_Rectangle extends LinearOpMode
                 .setCameraResolution(new Size(320, 240))
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .build();
-
         telemetry.setMsTransmissionInterval(100);   // Speed up telemetry updates for debugging.
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.MONOSPACE);
 
