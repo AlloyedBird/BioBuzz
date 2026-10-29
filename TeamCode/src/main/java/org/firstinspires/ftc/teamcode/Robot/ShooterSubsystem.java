@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Robot;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -18,7 +19,8 @@ public class ShooterSubsystem {
         hwMap = hardwareMap;
 
         shooterMotor = hwMap.get(DcMotorImplEx.class, "ShooterMotor");
-        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
     public void spinUp(){
@@ -26,6 +28,6 @@ public class ShooterSubsystem {
     }
 
     public void spinDown(){
-        shooterMotor.setVelocity(0, AngleUnit.DEGREES);
+        shooterMotor.setPower(0);
     }
 }
