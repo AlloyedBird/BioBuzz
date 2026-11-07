@@ -13,13 +13,17 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Annotations.DEV;
+import org.firstinspires.ftc.teamcode.Robot.AutoAim;
+import org.firstinspires.ftc.teamcode.Robot.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.Robot.Vision.AprilTagOverlayProcessor;
 import org.firstinspires.ftc.teamcode.Robot.Vision.VisionCircularProcessor;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-@TeleOp(name="FF-Telemetric", group="Telemetric")
+@TeleOp(name="FF-VisionCentric-Telemetric", group="Telemetric")
 @DEV
 public class FF_VCentric_LinearOp extends OpMode {
     private DcMotor frontLeft = null;
@@ -29,19 +33,20 @@ public class FF_VCentric_LinearOp extends OpMode {
     private SparkFunOTOS otos;
     SparkFunOTOS.Pose2D pos;
     SparkFunOTOS.Status otosStatus;
-    private AprilTagOverlayProcessor tagOverlayProcessor;
-    private VisionCircularProcessor circularProcessor;
+    private AprilTagProcessor tagProcessor;
     private VisionPortal tagPortal;
-    private VisionPortal circlePortal;
-    private List detectedCircles;
 
+    AutoAim autoAim;
+    ShooterSubsystem shooter;
     List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
     double robotYaw;
     //FlowerSubsystem flowerSubsystem = null;
 
     private boolean drivetrainModeFieldCentric = false;
-
+    boolean autoAiming = false;
+    double rotate;
+    boolean isBlue;
     @Override
     public void init() {
         //flowerSubsystem = new FlowerSubsystem(hardwareMap);
@@ -50,12 +55,6 @@ public class FF_VCentric_LinearOp extends OpMode {
         frontRight = hardwareMap.get(DcMotorImplEx.class, "frontRight");
         backLeft = hardwareMap.get(DcMotorImplEx.class, "backLeft");
         backRight = hardwareMap.get(DcMotorImplEx.class, "backRight");
-
-
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         otos = hardwareMap.get(SparkFunOTOS.class, "otos");
         otos.begin();
@@ -76,22 +75,28 @@ public class FF_VCentric_LinearOp extends OpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         }
 
-        tagOverlayProcessor = new AprilTagOverlayProcessor();
-        circularProcessor = new VisionCircularProcessor();
+        tagProcessor = new AprilTagProcessor.Builder()
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .setDrawTagID(true)
+                .setDrawTagOutline(true)
+                .setTagLibrary(AprilTagGameDatabase.getBioBuzzTagLibrary())
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+                .build();
+
 
         tagPortal = new VisionPortal.Builder()
-                .addProcessor(tagOverlayProcessor)
+                .addProcessor(tagProcessor)
                 .enableLiveView(true)
                 .setCamera(hardwareMap.get(WebcamName.class, "tagCamera"))
                 .setCameraResolution(new Size(640, 400))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .build();
 
-        circlePortal = new VisionPortal.Builder()
-                .addProcessor(circularProcessor)
-                .enableLiveView(true)
-                .setCamera(hardwareMap.get(WebcamName.class, "colorCamera"))
-                .build();
+         autoAim = new AutoAim(tagProcessor);
+         shooter = new ShooterSubsystem(hardwareMap);
+
+         shooter.MOTOR_VELOCITY = 360;
 
     }
 
@@ -100,6 +105,14 @@ public class FF_VCentric_LinearOp extends OpMode {
         if (gamepad1.a){
             drivetrainModeFieldCentric = !drivetrainModeFieldCentric;
         }
+        if (gamepad1.b){
+            isBlue = !isBlue;
+        }
+    }
+
+    @Override
+    public void start(){
+        shooter.spinUp();
     }
 
     @Override
@@ -108,7 +121,7 @@ public class FF_VCentric_LinearOp extends OpMode {
             hub.clearBulkCache();
         }
 
-        detectedCircles = circularProcessor.getDetectedCircles();
+        rotate = gamepad1.right_stick_x;
 
         robotYaw = pos.h;
         otosStatus = otos.getStatus();
@@ -123,8 +136,8 @@ public class FF_VCentric_LinearOp extends OpMode {
         telemetry.addData("Is robot oriented? ", drivetrainModeFieldCentric);
 
         telemetry.addLine("Sparkfun Data ↓");
-        telemetry.addData("Otos Depth Error: ", otosStatus.warnOpticalTracking);
-        telemetry.addData("Otos Tilt Error", otosStatus.warnTiltAngle);
+        telemetry.addData("Otos Depth Warning: ", otosStatus.warnOpticalTracking);
+        telemetry.addData("Otos Tilt Warning", otosStatus.warnTiltAngle);
         telemetry.addData("Otos Laser error: ", otosStatus.errorLsm);
         telemetry.addData("Otos Tracking Loss Error: ", otosStatus.errorPaa);
 
@@ -132,23 +145,47 @@ public class FF_VCentric_LinearOp extends OpMode {
         telemetry.addData("Otos X Pos: ", pos.x);
         telemetry.addData("Otos Y Pos: ", pos.y);
         telemetry.addData("Otos θ", pos.h);
+
         telemetry.addLine("Vision Data ↓");
-        telemetry.addData("Total Number of Detections", detectedCircles.size());
-        if (!detectedCircles.isEmpty() && detectedCircles.size() >= 3) {
-            telemetry.addData("Detected Circles", "CenterX: %.1f px, CenterY %.1f px, Radius %.1f px",
-                    detectedCircles.get(0), detectedCircles.get(1), detectedCircles.get(2));
-        } else {
-            telemetry.addLine("Incomplete Vision Data...");
-        }
+        telemetry.addLine("idk I didnt do ts yet");
+
+        telemetry.addData("Blue Alliance selected? ", isBlue);
+
 
         if (drivetrainModeFieldCentric){
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         }
         if (!drivetrainModeFieldCentric){
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, rotate);
+        }
+
+        if(gamepad1.a){
+            autoAiming = !autoAiming;
+        }
+
+        if (autoAiming){
+            if (isBlue){
+                autoAim.update(pos.h, AutoAim.Alliance.BLUE, rotate);
+            } else {
+                autoAim.update(pos.h, AutoAim.Alliance.RED, rotate);
+            }
+        } else {
+            autoAim.reset();
+        }
+
+        if (gamepad1.right_trigger >= 0.35){
+            shooter.openGate();
+        } else {
+            shooter.closeGate();
         }
 
         telemetry.update();
+    }
+
+    @Override
+    public void stop(){
+        shooter.spinDown();
+        tagPortal.close();
     }
 
     public void drive(double forward, double right, double rotate) {

@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class IntakeSubsystem {
     HardwareMap hwMap;
@@ -13,7 +14,7 @@ public class IntakeSubsystem {
     ServoImplEx controlServo;
     float intakeAmps;
     public IntakeSubsystem(HardwareMap hardwareMap){
-        hardwareMap = hwMap;
+        hwMap = hardwareMap;
 
         intakeMotor = hwMap.get(DcMotorImplEx.class, "intakeMotor");
         controlServo = hwMap.get(ServoImplEx.class, "controlServo");
@@ -29,7 +30,11 @@ public class IntakeSubsystem {
         intakeMotor.setPower(0);
     }
 
-    public boolean partIntaked(){
-        return intakeMotor.getPower() > intakeAmps;
+    public boolean hasPiece(){
+        return intakeMotor.getCurrent(CurrentUnit.AMPS) > intakeAmps;
+    }
+
+    public double getIntakeCurrent(){
+        return intakeMotor.getCurrent(CurrentUnit.AMPS);
     }
 }

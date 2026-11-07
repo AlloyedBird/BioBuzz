@@ -49,9 +49,6 @@ public class FF_FCentric_LinearOp extends OpMode {
         otos = hardwareMap.get(SparkFunOTOS.class, "otos");
         otos.begin();
 
-        if (!otos.begin()) {
-            throw new IllegalStateException("Otos not started!");
-        }
 
         otos.setLinearUnit(DistanceUnit.INCH);
         otos.setAngularUnit(AngleUnit.DEGREES);
