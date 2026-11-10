@@ -26,7 +26,7 @@ public class IntakeSubsystem {
         intakeMotor.setVelocity(100, AngleUnit.DEGREES);
     }
 
-    public void shutDown(){
+    public void spinDown(){
         intakeMotor.setPower(0);
     }
 

@@ -14,9 +14,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Annotations.DEV;
 import org.firstinspires.ftc.teamcode.Robot.AutoAim;
+import org.firstinspires.ftc.teamcode.Robot.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.Robot.ShooterSubsystem;
-import org.firstinspires.ftc.teamcode.Robot.Vision.AprilTagOverlayProcessor;
-import org.firstinspires.ftc.teamcode.Robot.Vision.VisionCircularProcessor;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -38,6 +37,7 @@ public class FF_VCentric_LinearOp extends OpMode {
 
     AutoAim autoAim;
     ShooterSubsystem shooter;
+    IntakeSubsystem intake;
     List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
     double robotYaw;
@@ -95,6 +95,7 @@ public class FF_VCentric_LinearOp extends OpMode {
 
          autoAim = new AutoAim(tagProcessor);
          shooter = new ShooterSubsystem(hardwareMap);
+         intake = new IntakeSubsystem(hardwareMap);
 
          shooter.MOTOR_VELOCITY = 360;
 
@@ -113,6 +114,7 @@ public class FF_VCentric_LinearOp extends OpMode {
     @Override
     public void start(){
         shooter.spinUp();
+        intake.spinUp();
     }
 
     @Override
@@ -186,6 +188,7 @@ public class FF_VCentric_LinearOp extends OpMode {
     public void stop(){
         shooter.spinDown();
         tagPortal.close();
+        intake.spinDown();
     }
 
     public void drive(double forward, double right, double rotate) {
