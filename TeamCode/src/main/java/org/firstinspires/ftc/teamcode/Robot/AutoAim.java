@@ -16,7 +16,6 @@ public class AutoAim {
     private static final double DEADBAND_DEG = 1.0;
 
     public final AprilTagProcessor aprilTag;
-    private final PIDController pid = new PIDController(0.02, 0.0, 0.002, 0.7);
 
     private boolean hasTarget = false;
     private double targetHeadingDeg = 0;
@@ -25,16 +24,10 @@ public class AutoAim {
         this.aprilTag = aprilTag;
     }
 
-    /** Call when the aim button is NOT held. */
-    public void reset() {
-        hasTarget = false;
-        pid.reset();
-    }
-
     public boolean hasTarget() { return hasTarget; }
 
-    /** Returns a rotate value for drive(). Falls back to manualRotate until a target has been seen. */
-    public double update(double headingDeg, Alliance alliance, double manualRotate) {
+    //This method returns the angle to turn to to properly aim the shooter
+       public double update(double headingDeg, Alliance alliance, double manualRotate) {
         AprilTagClusterDetection best = findBestCluster(alliance);
 
         if (best != null) {
@@ -47,12 +40,7 @@ public class AutoAim {
 
         if (!hasTarget) return manualRotate;
 
-        double error = AngleUnit.normalizeDegrees(targetHeadingDeg - headingDeg);
-        if (Math.abs(error) < DEADBAND_DEG) {
-            pid.reset();
-            return 0;
-        }
-        return TURN_SIGN * pid.calculate(error);
+        return AngleUnit.normalizeDegrees(targetHeadingDeg - headingDeg);
     }
 
     private AprilTagClusterDetection findBestCluster(Alliance alliance) {

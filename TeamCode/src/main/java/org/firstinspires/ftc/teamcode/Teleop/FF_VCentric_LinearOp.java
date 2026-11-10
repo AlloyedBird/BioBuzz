@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Annotations.DEV;
 import org.firstinspires.ftc.teamcode.Robot.AutoAim;
+import org.firstinspires.ftc.teamcode.Robot.Drive;
 import org.firstinspires.ftc.teamcode.Robot.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.Robot.ShooterSubsystem;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -38,6 +39,7 @@ public class FF_VCentric_LinearOp extends OpMode {
     AutoAim autoAim;
     ShooterSubsystem shooter;
     IntakeSubsystem intake;
+    Drive drive;
     List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
     double robotYaw;
@@ -96,6 +98,7 @@ public class FF_VCentric_LinearOp extends OpMode {
          autoAim = new AutoAim(tagProcessor);
          shooter = new ShooterSubsystem(hardwareMap);
          intake = new IntakeSubsystem(hardwareMap);
+         drive = new Drive(hardwareMap);
 
          shooter.MOTOR_VELOCITY = 360;
 
@@ -154,10 +157,10 @@ public class FF_VCentric_LinearOp extends OpMode {
         telemetry.addData("Blue Alliance selected? ", isBlue);
 
 
-        if (drivetrainModeFieldCentric){
+        if (!drivetrainModeFieldCentric){
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         }
-        if (!drivetrainModeFieldCentric){
+        if (drivetrainModeFieldCentric){
             driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, rotate);
         }
 
@@ -166,13 +169,7 @@ public class FF_VCentric_LinearOp extends OpMode {
         }
 
         if (autoAiming){
-            if (isBlue){
-                autoAim.update(pos.h, AutoAim.Alliance.BLUE, rotate);
-            } else {
-                autoAim.update(pos.h, AutoAim.Alliance.RED, rotate);
-            }
-        } else {
-            autoAim.reset();
+            drive.setRotateDegrees(autoAim.update(pos.h, isBlue ? AutoAim.Alliance.BLUE : AutoAim.Alliance.RED, rotate));
         }
 
         if (gamepad1.right_trigger >= 0.35){
