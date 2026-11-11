@@ -16,19 +16,16 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
-@Autonomous(name = "Red Test path", group = "Autonomous")
-public class RedTestAuto extends LinearOpMode {
+@Autonomous(name = "Park Auto", group = "Autonomous")
+public class ParkAuto extends LinearOpMode {
 
     private Follower follower;
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
     private final Pose start = poseFactory.of(56, 8, 90);
-    private final Pose point1 = poseFactory.of(10.267, 105.6815, 179.2595);
-    private final Pose point1Control1 = poseFactory.of(28.5424, 52.836, 0);
-    private final Pose point1Control2 = poseFactory.of(0, 0, 0);
-    private final Pose point1Control3 = poseFactory.of(42.0388, 104.7997, 0);
-    private final Pose point1Control4 = poseFactory.of(25.8948, 105.4795, 0);
+    private final Pose point1 = poseFactory.of(12.05, 106.3, 90);
+    private final Pose point1Control1 = poseFactory.of(8.8968, 60.942, 0);
 
     // Autonomous routine
     public Command autoRoutine() {
@@ -65,6 +62,6 @@ public class RedTestAuto extends LinearOpMode {
     }
 
     public Path path1() {
-        return Paths.curve(start, point1Control1, point1Control2, point1Control3, point1Control4, point1).tangent();
+        return Paths.curve(start, point1Control1, point1).constant(point1);
     }
 }
