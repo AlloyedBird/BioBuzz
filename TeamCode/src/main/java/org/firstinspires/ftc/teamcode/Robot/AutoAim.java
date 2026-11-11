@@ -10,7 +10,7 @@ public class AutoAim {
 
     // Shooter points 90° left of camera forward. Positive bearing = target is left of camera,
     // so the shooter is lined up when bearing == +90.
-    private static final double SHOOTER_OFFSET_DEG = 90.0;
+    private static final double SHOOTER_OFFSET_DEG = 0;
     // Drive code: positive rotate = clockwise. OTOS heading: positive = counterclockwise.
     private static final double TURN_SIGN = -1.0;
     private static final double DEADBAND_DEG = 1.0;

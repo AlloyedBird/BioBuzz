@@ -49,6 +49,8 @@ public class FF_VCentric_LinearOp extends OpMode {
     boolean autoAiming = false;
     double rotate;
     boolean isBlue;
+    double ANGULAR_SCALAR;
+    double LINEAR_SCALAR;
     @Override
     public void init() {
         //flowerSubsystem = new FlowerSubsystem(hardwareMap);
@@ -68,10 +70,16 @@ public class FF_VCentric_LinearOp extends OpMode {
         otos.setLinearUnit(DistanceUnit.INCH);
         otos.setAngularUnit(AngleUnit.DEGREES);
 
-        //otos.setOffset(new SparkFunOTOS.Pose2D(xOffset, yOffset, hOffset));
+        otos.setOffset(new SparkFunOTOS.Pose2D(0, 18, 0));
 
         otos.calibrateImu();
         otos.resetTracking();
+
+
+        //TODO: calibrate these
+        otos.setAngularScalar(ANGULAR_SCALAR);
+        otos.setLinearScalar(LINEAR_SCALAR);
+
 
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
@@ -140,16 +148,19 @@ public class FF_VCentric_LinearOp extends OpMode {
         telemetry.addData("Right Back Pos: ", backRight.getCurrentPosition());
         telemetry.addData("Is robot oriented? ", drivetrainModeFieldCentric);
 
-        telemetry.addLine("Sparkfun Data ↓");
+        telemetry.addLine("Sparkfun OTOS Data ↓");
         telemetry.addData("Otos Depth Warning: ", otosStatus.warnOpticalTracking);
         telemetry.addData("Otos Tilt Warning", otosStatus.warnTiltAngle);
         telemetry.addData("Otos Laser error: ", otosStatus.errorLsm);
         telemetry.addData("Otos Tracking Loss Error: ", otosStatus.errorPaa);
+        telemetry.addData("Otos Linear Scalar: ", otos.getLinearScalar());
+        telemetry.addData("Otos Angular Scalar: ", otos.getAngularScalar());
 
         telemetry.addLine("Pose Data ↓");
         telemetry.addData("Otos X Pos: ", pos.x);
         telemetry.addData("Otos Y Pos: ", pos.y);
         telemetry.addData("Otos θ", pos.h);
+        telemetry.addData("Otos Velocity", otos.getVelocity());
 
         telemetry.addLine("Vision Data ↓");
         telemetry.addLine("idk I didnt do ts yet");
