@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Robot;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
@@ -20,6 +21,7 @@ public class IntakeSubsystem {
         controlServo = hwMap.get(ServoImplEx.class, "controlServo");
 
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void spinUp(){

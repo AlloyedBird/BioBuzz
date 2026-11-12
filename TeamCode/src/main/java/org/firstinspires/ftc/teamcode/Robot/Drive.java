@@ -23,10 +23,10 @@ public class Drive {
 
     public Drive(HardwareMap hardwareMap) {
         hMap = hardwareMap;
-        leftFront = hMap.get(DcMotorEx.class, "leftFront");
-        leftBack = hMap.get(DcMotorEx.class, "leftBack");
-        rightBack = hMap.get(DcMotorEx.class, "rightBack");
-        rightFront = hMap.get(DcMotorEx.class, "rightFront");
+        leftFront = hMap.get(DcMotorEx.class, "frontLeft");
+        leftBack = hMap.get(DcMotorEx.class, "backLeft");
+        rightBack = hMap.get(DcMotorEx.class, "backRight");
+        rightFront = hMap.get(DcMotorEx.class, "frontRight");
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);

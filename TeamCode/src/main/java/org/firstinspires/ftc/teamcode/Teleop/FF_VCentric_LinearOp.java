@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.skeletonarmy.marrow.weaver.PathConfig;
+import com.skeletonarmy.marrow.weaver.Weaver;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -40,8 +42,6 @@ public class FF_VCentric_LinearOp extends OpMode {
     ShooterSubsystem shooter;
     IntakeSubsystem intake;
     Drive drive;
-    List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-
     double robotYaw;
     //FlowerSubsystem flowerSubsystem = null;
 
@@ -80,11 +80,6 @@ public class FF_VCentric_LinearOp extends OpMode {
         otos.setAngularScalar(ANGULAR_SCALAR);
         otos.setLinearScalar(LINEAR_SCALAR);
 
-
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-        }
-
         tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
@@ -98,7 +93,7 @@ public class FF_VCentric_LinearOp extends OpMode {
         tagPortal = new VisionPortal.Builder()
                 .addProcessor(tagProcessor)
                 .enableLiveView(true)
-                .setCamera(hardwareMap.get(WebcamName.class, "tagCamera"))
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setCameraResolution(new Size(640, 400))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .build();
@@ -108,7 +103,16 @@ public class FF_VCentric_LinearOp extends OpMode {
          intake = new IntakeSubsystem(hardwareMap);
          drive = new Drive(hardwareMap);
 
-         shooter.MOTOR_VELOCITY = 360;
+         shooter.MOTOR_VELOCITY = 10;
+        /*
+          Weaver.setConfig(new PathConfig()
+                .intakeWidth(4)
+                .robotWidth(12)
+                .robotHeight(16.0)
+                .clearance(1)
+                .smoothing(true));
+         */
+
 
     }
 
@@ -130,16 +134,12 @@ public class FF_VCentric_LinearOp extends OpMode {
 
     @Override
     public void loop(){
-        for (LynxModule hub : allHubs) {
-            hub.clearBulkCache();
-        }
 
         rotate = gamepad1.right_stick_x;
 
-        robotYaw = pos.h;
         otosStatus = otos.getStatus();
         pos = otos.getPosition();
-
+        robotYaw = pos.h;
 
         telemetry.addLine("Drivetrain Data ↓");
         telemetry.addData("Front Left Pos: ", frontLeft.getCurrentPosition());
@@ -183,7 +183,7 @@ public class FF_VCentric_LinearOp extends OpMode {
             drive.setRotateDegrees(autoAim.update(pos.h, isBlue ? AutoAim.Alliance.BLUE : AutoAim.Alliance.RED, rotate));
         }
 
-        if (gamepad1.right_trigger >= 0.35){
+        if (gamepad1.y){
             shooter.openGate();
         } else {
             shooter.closeGate();
@@ -192,12 +192,7 @@ public class FF_VCentric_LinearOp extends OpMode {
         telemetry.update();
     }
 
-    @Override
-    public void stop(){
-        shooter.spinDown();
-        tagPortal.close();
-        intake.spinDown();
-    }
+
 
     public void drive(double forward, double right, double rotate) {
         double frontLeftPower = forward + right + rotate;
