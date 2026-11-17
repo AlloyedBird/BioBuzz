@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Teleop;
 
+import static android.os.SystemClock.sleep;
+
 import android.util.Size;
 
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -8,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.skeletonarmy.marrow.weaver.PathConfig;
 import com.skeletonarmy.marrow.weaver.Weaver;
 
@@ -41,7 +44,7 @@ public class FF_VCentric_LinearOp extends OpMode {
     AutoAim autoAim;
     ShooterSubsystem shooter;
     IntakeSubsystem intake;
-    Drive drive;
+    //Drive drive;
     double robotYaw;
     //FlowerSubsystem flowerSubsystem = null;
 
@@ -60,6 +63,12 @@ public class FF_VCentric_LinearOp extends OpMode {
         backLeft = hardwareMap.get(DcMotorImplEx.class, "backLeft");
         backRight = hardwareMap.get(DcMotorImplEx.class, "backRight");
 
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
+
         otos = hardwareMap.get(SparkFunOTOS.class, "otos");
         otos.begin();
 
@@ -77,8 +86,8 @@ public class FF_VCentric_LinearOp extends OpMode {
 
 
         //TODO: calibrate these
-        otos.setAngularScalar(ANGULAR_SCALAR);
-        otos.setLinearScalar(LINEAR_SCALAR);
+        //otos.setAngularScalar(ANGULAR_SCALAR);
+        //otos.setLinearScalar(LINEAR_SCALAR);
 
         tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
@@ -101,9 +110,9 @@ public class FF_VCentric_LinearOp extends OpMode {
          autoAim = new AutoAim(tagProcessor);
          shooter = new ShooterSubsystem(hardwareMap);
          intake = new IntakeSubsystem(hardwareMap);
-         drive = new Drive(hardwareMap);
+         //drive = new Drive(hardwareMap);
 
-         shooter.MOTOR_VELOCITY = 10;
+         shooter.MOTOR_VELOCITY = 650;
         /*
           Weaver.setConfig(new PathConfig()
                 .intakeWidth(4)
@@ -131,7 +140,9 @@ public class FF_VCentric_LinearOp extends OpMode {
         shooter.spinUp();
         intake.spinUp();
     }
+/*
 
+ */
     @Override
     public void loop(){
 
@@ -167,26 +178,25 @@ public class FF_VCentric_LinearOp extends OpMode {
 
         telemetry.addData("Blue Alliance selected? ", isBlue);
 
-
-        if (!drivetrainModeFieldCentric){
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        }
-        if (drivetrainModeFieldCentric){
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, rotate);
-        }
+        drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
         if(gamepad1.a){
             autoAiming = !autoAiming;
         }
 
         if (autoAiming){
-            drive.setRotateDegrees(autoAim.update(pos.h, isBlue ? AutoAim.Alliance.BLUE : AutoAim.Alliance.RED, rotate));
+            //drive.setRotateDegrees(autoAim.update(pos.h, isBlue ? AutoAim.Alliance.BLUE : AutoAim.Alliance.RED, rotate));
         }
 
-        if (gamepad1.y){
+        if (gamepad1.right_trigger_pressed){
             shooter.openGate();
         } else {
             shooter.closeGate();
+        }
+
+        if (gamepad1.left_trigger_pressed){
+            intake.reject();
+            sleep(350);
         }
 
         telemetry.update();
@@ -212,16 +222,5 @@ public class FF_VCentric_LinearOp extends OpMode {
         frontRight.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeft.setPower(maxSpeed * (backLeftPower / maxPower));
         backRight.setPower(maxSpeed * (backRightPower / maxPower));
-    }
-
-    private void driveFieldRelative(double forward, double right, double rotate) {
-        double theta = Math.atan2(forward, right);
-        double r = Math.hypot(right, forward);
-        theta = AngleUnit.normalizeRadians(theta -
-                Math.toRadians(pos.h));
-
-        double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
-        drive(newForward, newRight, rotate);
     }
 }

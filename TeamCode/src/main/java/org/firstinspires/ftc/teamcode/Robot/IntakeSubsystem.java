@@ -25,18 +25,15 @@ public class IntakeSubsystem {
     }
 
     public void spinUp(){
-        intakeMotor.setVelocity(100, AngleUnit.DEGREES);
+        controlServo.setPosition(0.25);
+        intakeMotor.setVelocity(96, AngleUnit.DEGREES);
+    }
+
+    public void reject(){
+        intakeMotor.setVelocity(-180, AngleUnit.DEGREES);
     }
 
     public void spinDown(){
         intakeMotor.setPower(0);
-    }
-
-    public boolean hasPiece(){
-        return intakeMotor.getCurrent(CurrentUnit.AMPS) > intakeAmps;
-    }
-
-    public double getIntakeCurrent(){
-        return intakeMotor.getCurrent(CurrentUnit.AMPS);
     }
 }

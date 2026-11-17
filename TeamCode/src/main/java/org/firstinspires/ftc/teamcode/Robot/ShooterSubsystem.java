@@ -15,7 +15,7 @@ public class ShooterSubsystem {
     HardwareMap hwMap;
     DcMotorImplEx shooterMotor;
     ServoImplEx gateServo;
-    public double MOTOR_VELOCITY = 10;
+    public double MOTOR_VELOCITY = 100;
 
     public ShooterSubsystem(HardwareMap hardwareMap) {
         hwMap = hardwareMap;
