@@ -1,11 +1,16 @@
 package org.firstinspires.ftc.teamcode.pedro;
 
+import com.pedropathing.revhub.drivetrains.Mecanum;
+import com.pedropathing.revhub.localizers.OTOSLocalizer;
 import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.Tuner;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Const;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ForesightTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.MecanumTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.OTOSTuner;
+import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 public class Tuning {
     @Tuner
@@ -14,5 +19,10 @@ public class Tuning {
     }
     @Tuner
     public static Procedure otosTuner(){return new OTOSTuner();};
+
+    @Tuner
+    public static Procedure foresightTuner() {
+        return new ForesightTuner((hardwareMap) -> new OTOSLocalizer(hardwareMap, Constants.localizerConfig), (hardwareMap) -> new Mecanum(hardwareMap, Constants.drivetrainConfig));
+    }
     }
 
